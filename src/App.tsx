@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import "./App.css"; // Mantenha os estilos no App.css ou use o CSS Module
+import "./App.css"; // Mantenha os estilos no App.css
 
 // --- Tipagens ---
 interface IItem {
@@ -9,11 +9,12 @@ interface IItem {
   id: string;
   bonusItem: boolean;
   price: string;
+  quantity: number; // NOVO: Quantidade comprada
+  totalPoints?: number; // NOVO: Pontos do item * Quantidade
   ratio?: number;
 }
 // --- Dados Iniciais ---
 const initialItemsData: IItem[] = [
-  // ITENS COM BÔNUS
   {
     category: "Pequenas Alegrias",
     name: "Pacote de Bolacha Recheada",
@@ -21,6 +22,7 @@ const initialItemsData: IItem[] = [
     id: "bolacha",
     bonusItem: true,
     price: "",
+    quantity: 0,
   },
   {
     category: "Pequenas Alegrias",
@@ -29,6 +31,7 @@ const initialItemsData: IItem[] = [
     id: "wafer",
     bonusItem: true,
     price: "",
+    quantity: 0,
   },
   {
     category: "Pequenas Alegrias",
@@ -37,8 +40,8 @@ const initialItemsData: IItem[] = [
     id: "goma",
     bonusItem: true,
     price: "",
+    quantity: 0,
   },
-  // ITENS SEM BÔNUS
   {
     category: "Sabor de Festa",
     name: "Caixa de Bis ou Hershey's Mais",
@@ -46,6 +49,7 @@ const initialItemsData: IItem[] = [
     id: "bis",
     bonusItem: false,
     price: "",
+    quantity: 0,
   },
   {
     category: "Sabor de Festa",
@@ -54,6 +58,7 @@ const initialItemsData: IItem[] = [
     id: "barraChoco",
     bonusItem: false,
     price: "",
+    quantity: 0,
   },
   {
     category: "Sabor de Festa",
@@ -62,6 +67,7 @@ const initialItemsData: IItem[] = [
     id: "cookies",
     bonusItem: false,
     price: "",
+    quantity: 0,
   },
   {
     category: "O Grande Pedido",
@@ -70,6 +76,7 @@ const initialItemsData: IItem[] = [
     id: "cxBombom",
     bonusItem: false,
     price: "",
+    quantity: 0,
   },
   {
     category: "Símbolo do Natal",
@@ -78,6 +85,7 @@ const initialItemsData: IItem[] = [
     id: "panettone",
     bonusItem: true,
     price: "",
+    quantity: 0,
   },
   {
     category: "Kit Sonho Mágico",
@@ -86,6 +94,7 @@ const initialItemsData: IItem[] = [
     id: "kit",
     bonusItem: false,
     price: "",
+    quantity: 0,
   },
 ];
 
@@ -93,6 +102,7 @@ const initialItemsData: IItem[] = [
 interface ItemRowProps {
   item: IItem;
   handlePriceChange: (id: string, newPrice: string) => void;
+  handleQuantityChange: (id: string, newQuantity: number) => void; // NOVO prop
   isBestDeal: boolean;
   bonusActive: boolean;
 }
@@ -100,38 +110,66 @@ interface ItemRowProps {
 const ItemRow: React.FC<ItemRowProps> = ({
   item,
   handlePriceChange,
+  handleQuantityChange,
   isBestDeal,
   bonusActive,
 }) => {
-  // Calcula pontos e bônus
   const currentPoints =
     item.bonusItem && bonusActive ? item.points * 2 : item.points;
   const isDoubled = item.bonusItem && bonusActive;
   const ratio = item.ratio || 0;
+  const totalPoints = item.totalPoints || 0; // Pega o totalPoints calculado
 
   return (
     <div className={`item-row ${isBestDeal ? "best-deal" : ""}`}>
-      <label htmlFor={`price-${item.id}`}>{item.name}</label>
-      <span className={`points ${isDoubled ? "doubled" : ""}`}>
-        {currentPoints} pts {isDoubled && "(BÔNUS)"}
-      </span>
-      R$
-      <input
-        type="number"
-        step="0.01"
-        min="0"
-        id={`price-${item.id}`}
-        placeholder="0.00"
-        value={item.price}
-        // Evento tipado para input de formulário
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          handlePriceChange(item.id, e.target.value)
-        }
-      />
-      <span>
-        <span className="result">{ratio.toFixed(2)}</span> Pts/R$
-      </span>
-      <span className="best-label">{isBestDeal && "✅ MELHOR NEGÓCIO!"}</span>
+      <div className="item-name-col">
+        <label htmlFor={`price-${item.id}`}>{item.name}</label>
+        <span className={`points ${isDoubled ? "doubled" : ""}`}>
+          {currentPoints} pts {isDoubled && "(BÔNUS)"}
+        </span>
+      </div>
+
+      <div className="input-col">
+        <div className="input-group">
+          <label>Preço R$:</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            id={`price-${item.id}`}
+            placeholder="0.00"
+            value={item.price}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handlePriceChange(item.id, e.target.value)
+            }
+          />
+        </div>
+        <div className="input-group">
+          <label>Qtd.:</label>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            id={`quantity-${item.id}`}
+            placeholder="0"
+            value={item.quantity}
+            // Conversão para número antes de chamar a função
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleQuantityChange(item.id, parseInt(e.target.value) || 0)
+            }
+          />
+        </div>
+      </div>
+
+      <div className="result-col">
+        <span className="pts-per-real">
+          <span className="result">{ratio.toFixed(2)}</span> Pts/R$
+        </span>
+        <span className="total-points">
+          Total: <strong>{totalPoints} pts</strong>
+        </span>
+        <span className="best-label">{isBestDeal && "✅ MELHOR NEGÓCIO!"}</span>
+      </div>
     </div>
   );
 };
@@ -141,19 +179,26 @@ const App: React.FC = () => {
   const [items, setItems] = useState<IItem[]>(initialItemsData);
   const [bonusActive, setBonusActive] = useState<boolean>(false);
   const [bestDealId, setBestDealId] = useState<string | null>(null);
+  const [grandTotalPoints, setGrandTotalPoints] = useState<number>(0);
 
-  // Função de cálculo encapsulada em useCallback para otimização
   const calculateBestDeal = useCallback(
     (currentItems: IItem[], currentBonusActive: boolean) => {
       let bestRatio = -1;
       let newBestDealId: string | null = null;
+      let runningTotalPoints = 0;
 
       const updatedItems = currentItems.map((item) => {
         const price = parseFloat(item.price);
+        const quantity = item.quantity;
         const currentPoints =
           item.bonusItem && currentBonusActive ? item.points * 2 : item.points;
         let ratio = 0;
 
+        // NOVO: Calcula total de pontos para a quantidade inserida
+        const totalPoints = currentPoints * quantity;
+        runningTotalPoints += totalPoints;
+
+        // O ratio (Pts/R$) ainda é calculado baseado em 1 unidade
         if (price > 0 && !isNaN(price)) {
           ratio = currentPoints / price;
         }
@@ -162,11 +207,12 @@ const App: React.FC = () => {
           bestRatio = ratio;
           newBestDealId = item.id;
         }
-        return { ...item, ratio }; // Adiciona o ratio ao objeto item
+        return { ...item, ratio, totalPoints };
       });
 
       setItems(updatedItems);
       setBestDealId(newBestDealId);
+      setGrandTotalPoints(runningTotalPoints); // Atualiza o total geral
     },
     [],
   );
@@ -174,9 +220,12 @@ const App: React.FC = () => {
   // Efeito para recalcular quando itens ou bônus mudam
   useEffect(() => {
     calculateBestDeal(items, bonusActive);
-  }, [items.map((i) => i.price).join(","), bonusActive, calculateBestDeal]);
+  }, [
+    items.map((i) => `${i.price},${i.quantity}`).join(","),
+    bonusActive,
+    calculateBestDeal,
+  ]); // Monitora preço E quantidade
 
-  // Função para atualizar o preço
   const handlePriceChange = (id: string, newPrice: string) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
@@ -185,11 +234,21 @@ const App: React.FC = () => {
     );
   };
 
+  const handleQuantityChange = (id: string, newQuantity: number) => {
+    // Garante que a quantidade não é negativa
+    const safeQuantity = Math.max(0, newQuantity);
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, quantity: safeQuantity } : item,
+      ),
+    );
+  };
+
   const toggleBonus = () => {
     setBonusActive((prev) => !prev);
   };
 
-  // Agrupa os itens por categoria para exibição
+  // Agrupa os itens por categoria
   const groupedItems = items.reduce((acc: { [key: string]: IItem[] }, item) => {
     acc[item.category] = acc[item.category] || [];
     acc[item.category].push(item);
@@ -203,14 +262,10 @@ const App: React.FC = () => {
 
   return (
     <div className="container">
-      <h1>💰 Calculadora de Pontos por Custo (TypeScript)</h1>
-      <p>
-        Insira o preço de cada item e veja qual oferece o melhor custo-benefício
-        (Pts/R$).
-      </p>
+      <h1>💰 Calculadora de Pontos por Custo</h1>
+      <p>Insira o preço e a quantidade desejada de cada item.</p>
 
       <div className="controls">
-        {/* O evento de clique é tipado automaticamente pelo React.FC */}
         <button
           id="bonusButton"
           onClick={toggleBonus}
@@ -222,7 +277,6 @@ const App: React.FC = () => {
 
       <div id="calculator">
         {Object.entries(groupedItems).map(([category, categoryItems]) => (
-          // React.Fragment é usado para evitar chaves desnecessárias
           <React.Fragment key={category}>
             <div className="category-header">{category}</div>
             {categoryItems.map((item) => (
@@ -230,12 +284,20 @@ const App: React.FC = () => {
                 key={item.id}
                 item={item}
                 handlePriceChange={handlePriceChange}
+                handleQuantityChange={handleQuantityChange} // NOVO
                 isBestDeal={item.id === bestDealId}
                 bonusActive={bonusActive}
               />
             ))}
           </React.Fragment>
         ))}
+      </div>
+
+      <div className="grand-total">
+        <h2>
+          Total de Pontos Acumulados:{" "}
+          <span className="final-score">{grandTotalPoints} pts</span>
+        </h2>
       </div>
     </div>
   );
