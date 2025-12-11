@@ -3,5 +3,11 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "compilerOptions": {
+    // Ignora erros em código de terceiros (node_modules)
+    "skipLibCheck": true,
+    // (Opcional, mas útil) Permite que módulos importados sejam 'any' se não tiverem tipagem.
+    "allowSyntheticDefaultImports": true
+  }
 }
