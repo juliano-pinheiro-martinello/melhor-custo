@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+    </head>
+    <body>
+        <header></header>
+        <main></main>
+        <footer></footer>
+    </body>
+</html>
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Calculadora de Custo-Benefício (Pontos)</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                background-color: #f4f4f9;
+            }
+            h1 {
+                color: #333;
+                border-bottom: 2px solid #ccc;
+                padding-bottom: 10px;
+            }
+            .item-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+                padding: 10px;
+                background-color: #fff;
+                border-radius: 5px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            .item-row.best-deal {
+                border: 3px solid #28a745;
+                background-color: #e6ffed;
+                font-weight: bold;
+            }
+            .item-row label {
+                flex: 2;
+                margin-right: 15px;
+            }
+            .item-row input {
+                flex: 1;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                text-align: right;
+                margin-right: 15px;
+                max-width: 100px;
+            }
+            .item-row span {
+                flex: 1;
+                text-align: right;
+                font-size: 1.1em;
+                color: #007bff;
+            }
+            .points {
+                width: 60px;
+                text-align: center;
+                font-weight: bold;
+                color: #6c757d;
+            }
+            .best-label {
+                color: #28a745;
+                font-size: 1.2em;
+                margin-left: 10px;
+            }
+            .category-header {
+                background-color: #e9ecef;
+                padding: 5px 10px;
+                margin-top: 20px;
+                border-radius: 5px 5px 0 0;
+                font-weight: bold;
+                color: #495057;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>💰 Calculadora de Pontos por Custo</h1>
+        <p>
+            Insira o preço de cada item. O valor "Pts/R$" será atualizado, e o
+            melhor negócio será destacado!
+        </p>
+
+        <div id="calculator"></div>
+
+        <script>
+            // Dados da sua lista, incluindo Pontos e um ID único para o cálculo.
+            const items = [
+                {
+                    category: "Pequenas Alegrias (10 pts)",
+                    name: "Pacote de Bolacha Recheada (10 pts)",
+                    points: 10,
+                    id: "bolacha",
+                },
+                {
+                    category: "Pequenas Alegrias (10 pts)",
+                    name: "Pacote de Wafer (10 pts)",
+                    points: 10,
+                    id: "wafer",
+                },
+                {
+                    category: "Pequenas Alegrias (10 pts)",
+                    name: "Pacote de Bala de Goma/Fini (min 80g) (10 pts)",
+                    points: 10,
+                    id: "goma",
+                },
+
+                {
+                    category: "Sabor de Festa (25 pts)",
+                    name: "Caixa de Bis ou Hershey's Mais (25 pts)",
+                    points: 25,
+                    id: "bis",
+                },
+                {
+                    category: "Sabor de Festa (25 pts)",
+                    name: "Barra de Chocolate (min 80g) (25 pts)",
+                    points: 25,
+                    id: "barraChoco",
+                },
+                {
+                    category: "Sabor de Festa (25 pts)",
+                    name: "Pacote de Cookies (25 pts)",
+                    points: 25,
+                    id: "cookies",
+                },
+
+                {
+                    category: "O Grande Pedido (50 pts)",
+                    name: "Caixa de Bombom (Garoto, Nestlé, Lacta) (50 pts)",
+                    points: 50,
+                    id: "cxBombom",
+                },
+
+                {
+                    category: "Símbolo do Natal (80 pts)",
+                    name: "Panettone ou Chocotone (400g/500g) (80 pts)",
+                    points: 80,
+                    id: "panettone",
+                },
+
+                // O Kit será tratado como um único item para fins de cálculo de custo/benefício
+                {
+                    category: "Kit Sonho Mágico (200 pts)",
+                    name: "Kit Completo (1 Panettone + 1 Cx Bombom + 2 Pct Bolacha) (200 pts)",
+                    points: 200,
+                    id: "kit",
+                },
+            ];
+
+            const calculatorDiv = document.getElementById("calculator");
+            let lastCategory = "";
+
+            // 1. Criar a interface
+            items.forEach((item) => {
+                // Adicionar cabeçalho de categoria
+                if (item.category !== lastCategory) {
+                    const header = document.createElement("div");
+                    header.className = "category-header";
+                    header.textContent = item.category.split(" (")[0]; // Tira os pontos para o título
+                    calculatorDiv.appendChild(header);
+                    lastCategory = item.category;
+                }
+
+                // Criar a linha do item
+                const row = document.createElement("div");
+                row.className = "item-row";
+                row.id = `row-${item.id}`;
+
+                row.innerHTML = `
+                <label for="price-${item.id}">${item.name.split(" (")[0]}</label>
+                <span class="points">${item.points} pts</span>
+                R$ <input type="number" step="0.01" min="0" id="price-${item.id}" placeholder="0.00" oninput="calculateBestDeal()">
+                <span><span id="result-${item.id}">0.00</span> Pts/R$</span>
+                <span class="best-label" id="best-label-${item.id}"></span>
+            `;
+                calculatorDiv.appendChild(row);
+            });
+
+            // 2. Função de Cálculo (Lógica)
+            function calculateBestDeal() {
+                let bestRatio = -1;
+                let bestItemId = "";
+
+                // Limpa o destaque anterior
+                document.querySelectorAll(".item-row").forEach((row) => {
+                    row.classList.remove("best-deal");
+                    row.querySelector(".best-label").textContent = "";
+                });
+
+                // Itera sobre todos os itens para calcular e encontrar o melhor
+                items.forEach((item) => {
+                    const priceInput = document.getElementById(
+                        `price-${item.id}`,
+                    );
+                    const resultSpan = document.getElementById(
+                        `result-${item.id}`,
+                    );
+                    const price = parseFloat(priceInput.value);
+
+                    if (price > 0 && !isNaN(price)) {
+                        const ratio = item.points / price; // Pontos por Real
+                        resultSpan.textContent = ratio.toFixed(2);
+
+                        if (ratio > bestRatio) {
+                            bestRatio = ratio;
+                            bestItemId = item.id;
+                        }
+                    } else {
+                        resultSpan.textContent = "0.00";
+                    }
+                });
+
+                // 3. Aplica o destaque no melhor item
+                if (bestItemId) {
+                    const bestRow = document.getElementById(
+                        `row-${bestItemId}`,
+                    );
+                    bestRow.classList.add("best-deal");
+                    bestRow.querySelector(".best-label").textContent =
+                        "✅ MELHOR NEGÓCIO!";
+                }
+            }
+        </script>
+    </body>
+</html>
