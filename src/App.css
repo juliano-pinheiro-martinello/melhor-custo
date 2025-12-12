@@ -73,7 +73,7 @@ h1 {
 .input-col {
     flex: 1.5; /* Coluna para inputs */
     display: flex;
-    gap: 15px;
+    gap: 18px;
 }
 .input-group {
     display: flex;

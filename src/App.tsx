@@ -159,6 +159,13 @@ const ItemRow: React.FC<ItemRowProps> = ({
             }
           />
         </div>
+        <div>
+          Total:{" "}
+          {(Number(item?.price) * item.quantity).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          })}
+        </div>
       </div>
 
       <div className="result-col">
